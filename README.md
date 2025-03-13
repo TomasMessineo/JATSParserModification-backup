@@ -266,66 +266,62 @@ Estructura del Directorio
 
 Explicación de la Clase TableHTML
 
-La clase TableHTML procesa y crea un arreglo para renderizar el HTML de la Tabla de Citas, siguiendo estos pasos:
+La clase TableHTML procesa y crea un arreglo para renderizar el HTML de la Tabla de Citas, siguiendo los siguientes pasos:
 1. Inicialización del DOM y del XPath
 
-    Se instancia un DOMDocument y se carga en él el archivo XML (la ruta se recibe como parámetro).
-    Se crea un DOMXPath (almacenado en $xpath) para realizar consultas sobre el XML JATS.
+    Se instancia un DOMDocument y se carga el archivo XML proporcionado como parámetro.
+    Se crea un DOMXPath (almacenado en la variable $xpath) para realizar consultas sobre el XML JATS.
 
 2. Extracción de las Citas (extractXRefs())
 
-    Propósito:
-    Buscar en el XML todas las citas (elementos <xref> dentro de <body>).
+Propósito: Buscar todas las citas dentro del XML (elementos dentro de <xref>).
 
-    Proceso:
-        Se extraen atributos como id y rid.
-        Se obtienen las 50 palabras anteriores (definidas en la constante CITATION_MARKER) para obtener el "Contexto".
-        Se implementa una marca para diferenciar citas con el mismo rid en el mismo párrafo.
+Proceso:
 
-    Resultado:
-    Se crea el arreglo $xrefsArray con:
+    Se extraen atributos como id y rid.
+    Se obtienen las 50 palabras anteriores (definidas en la constante CITATION_MARKER) para obtener el "Contexto".
+    Se implementa una marca para diferenciar citas con el mismo rid en el mismo párrafo.
 
-    [
-        'xref_id_unico' => [
-            'context' => 'Contexto obtenido',
-            'rid' => 'Valor del atributo rid',
-            'originalText' => 'Texto original del xref sin la marca'
-        ],
-        // ...
-    ]
+Resultado: Se crea el arreglo $xrefsArray con la siguiente estructura:
+
+$xrefsArray = [
+    'xref_id_unico' => [
+        'context' => 'Contexto obtenido',
+        'rid' => 'Valor del atributo rid',
+        'originalText' => 'Texto original del xref sin la marca'
+    ],
+    // ... más citas
+];
 
 3. Extracción de las Referencias (extractReferences())
 
-    Propósito:
-    Obtener todas las referencias del elemento <back> del XML.
+Propósito: Obtener todas las referencias dentro del elemento del XML.
 
-    Proceso:
-        Cada referencia se obtiene de un <ref> con su atributo id.
-        Se extrae el texto completo mediante <mixed-citation> y detalles con <element-citation>.
+Proceso:
 
-    Resultado:
-    Se crea el arreglo $referencesArray con una estructura similar a:
+    Se obtiene cada referencia de un <ref> con su atributo id.
+    Se extrae el texto completo mediante el atributo reference y se obtienen los detalles con los autores.
 
-    $referencesArray['parser0'] = [
-        'reference' => 'Referencia completa obtenida',
-        'authors' => [
-            'data_1' => [
-                'surname' => 'Messineo',
-                'year' => '2025'
-            ],
-            // ...
-        ]
-    ];
+Resultado: Se crea el arreglo $referencesArray con una estructura similar a:
+
+$referencesArray['parser0'] = [
+    'reference' => 'Referencia completa obtenida',
+    'authors' => [
+        'data_1' => [
+            'surname' => 'Messineo',
+            'year' => '2025'
+        ],
+        // ... más autores
+    ]
+];
 
 4. Fusión de Arreglos (mergeArrays())
 
-    Propósito:
-    Combinar $xrefsArray y $referencesArray en un solo arreglo.
+Propósito: Combinar los arreglos $xrefsArray y $referencesArray en un solo arreglo.
 
-    Resultado:
-    Se genera un arreglo tipo diccionario con una estructura como:
+Resultado: Se genera un arreglo tipo diccionario con la siguiente estructura:
 
-[
+$mergedArray = [
     'xref_id1' => [
         'status' => 'default', // o 'not-default'
         'citationText' => '',  // Texto de la cita (modificable)
@@ -336,24 +332,15 @@ La clase TableHTML procesa y crea un arreglo para renderizar el HTML de la Tabla
                 'id' => 'parser_0',
                 'reference' => 'Reference 1',
                 'authors' => [
-                    'data_1' => [
-                        'surname' => 'Smith',
-                        'year' => '2020'
-                    ],
-                    'data_2' => [
-                        'surname' => 'Johnson',
-                        'year' => '2020'
-                    ]
+                    'data_1' => ['surname' => 'Smith', 'year' => '2020'],
+                    // ... más autores
                 ]
             ],
             [
                 'id' => 'parser_1',
                 'reference' => 'Reference 2',
                 'authors' => [
-                    'data_1' => [
-                        'surname' => 'Doe',
-                        'year' => '2019'
-                    ]
+                    'data_1' => ['surname' => 'Doe', 'year' => '2019']
                 ]
             ]
         ]
@@ -368,14 +355,11 @@ La clase TableHTML procesa y crea un arreglo para renderizar el HTML de la Tabla
                 'id' => 'parser_1',
                 'reference' => 'Reference 1',
                 'authors' => [
-                    'data_1' => [
-                        'surname' => 'Doe',
-                        'year' => '2019'
-                    ]
+                    'data_1' => ['surname' => 'Doe', 'year' => '2019']
                 ]
             ]
         ]
     ]
-]
+];
 
-Este arreglo se utiliza para renderizar la Tabla de Citas en HTML.
+Este arreglo final se utiliza para renderizar la Tabla de Citas en HTML.
