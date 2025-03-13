@@ -2,7 +2,6 @@
   <h1>Plugin jatsParser para OJS</h1>
   <p>Documentación Técnica y Detallada</p>
   <img src="https://img.shields.io/badge/OJS-Compatible-blue" alt="OJS Compatible">
-  <img src="https://img.shields.io/badge/Version-1.0-green" alt="Versión 1.0">
 </div>
 
 ---
