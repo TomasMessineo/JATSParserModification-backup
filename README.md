@@ -335,7 +335,7 @@ Este arreglo se crea siguiendo los siguientes pasos:
 
 2. **Llamada a `extractXRefs`**: En el constructor de la clase, se llama a la función `extractXRefs()`. Esta función realiza una consulta `xpath` para buscar en el DOM del documento XML todas las citas. Las citas en un XML JATS aparecen en el elemento `<body>` bajo una etiqueta llamada `<xref>`, que contiene atributos como el ID de cita (un identificador único) y `rid` (hace referencia a las citas que son citadas, por ejemplo, si el `rid` dice `parser0 parser1 parser2`, esto significa que se están citando las referencias con los IDs `parser0`, `parser1`, y `parser2`).
 
-   Cada cita encontrada es procesada para obtener las 50 palabras anteriores a la cita, lo que conocemos como "Contexto" en la Tabla de Citas. Si se definen dos o más citas en el mismo párrafo con el mismo atributo `rid`, se marca la cita para evitar problemas de procesamiento.
+   Cada cita encontrada es procesada para obtener las 50 palabras anteriores desde el lugar donde fue marcada, lo que conocemos como "Contexto" en la Tabla de Citas. Si se definen dos o más citas en el mismo párrafo con el mismo atributo `rid`, se marca la cita para evitar problemas de procesamiento.
 
    La cantidad de palabras que se toman antes de la cita está definida en la constante `CITATION_MARKER`, la cual está originalmente configurada en 50, pero se puede modificar.
 
