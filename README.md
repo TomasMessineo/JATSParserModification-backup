@@ -113,6 +113,128 @@ Para agregar nuevas plantillas correctamente, seguir estos pasos:
    **Nota:** El nombre de la plantilla en esta ruta **debe coincidir** con el nombre de la clase creada en el paso 1.
 5. Tomar como referencia `TemplateOne` para entender el uso de TCPDF.
 
+Con esta estructura, el plugin `jatsParser` permite la correcta generación de PDFs personalizados en OJS, asegurando flexibilidad y escalabilidad en futuras mejoras.
+
 ---
 
-Con esta estructura, el plugin `jatsParser` permite la correcta generación de PDFs personalizados en OJS, asegurando flexibilidad y escalabilidad en futuras mejoras.
+### TemplateOne y la Configuración de PDF
+
+En `TemplateOne`, se trabaja con una configuración recibida como parámetro. Esta clase, `Configuration`, está dentro de la carpeta `PDFConfig`.
+
+Se encuentran definidos tres arreglos clave:
+
+- **`$config`**: Contiene la configuración general utilizada para acceder a los metadatos y la configuración propia de la plantilla PDF y el estilo del artículo.
+- **`metadata`**: Contiene todos los metadatos utilizados en la creación de la plantilla.
+- **`template_body`**: Contiene los estilos para los metadatos del cuerpo de la plantilla.
+
+#### Estructura de `$config`
+
+```php
+'header' => Contiene los estilos para los metadatos del HEADER
+'footer' => Contiene los estilos para los metadatos del FOOTER
+'body' => Contiene los estilos para el BODY (artículo científico)
+'template_body' => Contiene los estilos para los metadatos del body de la plantilla
+```
+
+#### Acceso a la Configuración
+
+Desde la plantilla (`TemplateOne`), se puede acceder a la configuración mediante métodos `get(NombreParte)Config`.
+
+Por ejemplo, para obtener la configuración del encabezado:
+
+```php
+$this->config->getHeaderConfig();
+```
+
+Esto retornará un arreglo con la configuración del `header` y los metadatos:
+
+```php
+[
+    'config' => { datos para el header del arreglo $config de Configuration },
+    'metadata' => { todos los metadatos }
+]
+```
+
+Este mismo patrón se repite para:
+
+- `getTemplateBodyConfig()`
+- `getFooterConfig()`
+- `getBodyConfig()`
+
+### Estilos de Citación Soportados
+
+La clase `Configuration` define dos arreglos relacionados con los estilos de citación:
+
+- **`$supportedCustomCitationStyles`**: Define los estilos de citación personalizados que mostrarán una tabla para conectar las citas con las referencias en el formato deseado (actualmente solo soporta APA).
+- **`$numberedReferencesCitationStyles`**: Contiene los estilos de citación que tendrán referencias numeradas en el PDF (por ejemplo, IEEE usa referencias numeradas, mientras que APA no).
+
+### Funcionalidad de `Body()`
+
+La función `Body()` es llamada en el constructor de la plantilla. Dentro de esta función, se invoca el método `_prepareForPdfGalley()` de la clase `PDFBodyHelper`.
+
+Este método:
+
+- Recorre el DOM HTML del artículo científico.
+- Adapta el contenido para su generación en PDF.
+- Realiza consultas con `XPath` para acomodar figuras y tablas.
+- Si el lenguaje de citación está soportado en `$supportedCustomCitationStyles`, usa `CustomPublicationSettingsDAO` para obtener datos de la base de datos, consultando la tabla `publication_settings`.
+
+### Traducciones en `PDFConfig`
+
+La clase `Translations` en `PDFConfig` contiene un arreglo con traducciones para diferentes idiomas.
+
+#### Estructura del Arreglo de Traducciones
+
+```php
+[
+    'en_EN' => [
+        'abstract' => 'Abstract',
+        'received' => 'Received',
+        'accepted' => 'Accepted',
+        'published' => 'Published',
+        'keywords' => 'Keywords',
+        'license_text' => 'This work is under a Creative Commons License',
+        'references_sections_separator' => '&'
+    ],
+    'es_ES' => [
+        'abstract' => 'Resumen',
+        'received' => 'Recibido',
+        'accepted' => 'Aceptado',
+        'published' => 'Publicado',
+        'keywords' => 'Palabras clave',
+        'license_text' => 'Esta obra está bajo una Licencia Creative Commons',
+        'references_sections_separator' => 'y'
+    ],
+    'pt_BR' => [
+        'abstract' => 'Resumo',
+        'received' => 'Recebido',
+        'accepted' => 'Aceito',
+        'published' => 'Publicado',
+        'keywords' => 'Palavras chave',
+        'license_text' => 'Este trabalho está sob uma licença Creative Commons',
+        'references_sections_separator' => 'e'
+    ]
+];
+```
+
+### Importancia de las Traducciones
+
+Las traducciones son utilizadas para generar el PDF en distintos idiomas. Los metadatos pueden estar cargados en diferentes idiomas, por lo que estas traducciones son necesarias para generar correctamente cada versión.
+
+Ejemplo:
+
+- En español: `Resumen`
+- En inglés: `Abstract`
+- En portugués: `Resumo`
+
+Actualmente, los idiomas soportados son:
+
+- **Inglés**
+- **Español**
+- **Portugués**
+
+Se pueden agregar más idiomas según se requiera en futuras versiones del sistema.
+
+
+
+
