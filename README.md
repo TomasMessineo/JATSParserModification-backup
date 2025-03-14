@@ -236,6 +236,56 @@ Actualmente, los idiomas soportados son:
 Se pueden agregar más idiomas según se requiera en futuras versiones del sistema.
 
 ---
+---
+---
+
+# JatsParser: Tabla de Citas
+
+En pleno desarrollo surgió una temática que resultó representar problema: de qué forma citar una referencia. Esto porque la forma de citar una referencia en IEEE, por ejemplo, es diferente a como se hace en APA.
+
+Por ejemplo, en IEEE, para citar se utilizan los corchetes `[]`, y las referencias además deben estar numeradas. Dentro de los corchetes se indica con un número la referencia a la cual se está citando.
+
+Si utilizamos una herramienta como el plugin **Texture** de OJS, al querer indicar cada cita con sus respectivas referencias, se pondrá como texto de la cita `[1]`, por ejemplo. Esto se debe a que este plugin solo soporta IEEE como estilo de citación.
+
+Esto resultó ser un problema si se está trabajando en APA, ya que el texto de la cita no debería decir `[1]` o `[2]`, sino que debería aparecer algo como `(Giménez, 2025)`, o `(Giménez, 2025, pp. 15)`.
+
+Es por eso que se optó por desarrollar una nueva funcionalidad en este plugin **JatsParser**: **La tabla de citas**.
+
+## La tabla de citas
+
+Esta tabla de citas por el momento solo aparece si desde la configuración de **JatsParser** (en la sección de Módulos instalados de OJS) se indica que se está trabajando con APA. A futuro se quiere implementar una tabla para cada estilo de citación.
+
+### Componentes de la tabla de citas
+
+- **Contexto:** Es una porción de texto que hace referencia a dónde se está queriendo agregar la cita. Es como una ayuda visual para saber en qué parte del artículo se está citando. Esto se indica mostrando las 50 palabras (si existen) antes de donde se indicó que hay una cita.
+  
+- **Referencias:** Son aquellas referencias que están siendo citadas. Por ejemplo, si en una cita se citan 4 referencias, estas referencias aparecerán en la tabla bajo un contexto.
+
+- **Estilo de citación:** Menú desplegable en el cual se indicará el texto que queremos que aparezca en cada cita. En **APA** hay 3 opciones posibles: 
+  1. `(Apellido, año)`
+  2. `(Año)`
+  3. "Otro" – Al hacer clic sobre esta opción, se abrirá un input text donde se puede especificar un texto personalizado.
+
+Una vez seleccionado el estilo de citación para cada cita, debemos guardar los cambios haciendo clic sobre el botón **"Guardar citas"**. Esto guardará un JSON en la base de datos, específicamente en la fila `"jatsParser::citationTableData"` de la tabla `"publicationsettings"`. Es importante destacar que cada artículo tendrá su propia tabla y configuraciones guardadas. A la hora de guardar el JSON en la base de datos, se tiene en cuenta el **ID de la publicación**, el cual se indica en esta misma tabla bajo el nombre `"publication_id"`.
+
+### Ayuda visual y colores
+
+En la tabla se pueden ver cambios visuales según el estado de cada opción seleccionada en la columna **Estilo de Cita**:
+
+- **Color verde:** Es la opción predeterminada. Si no hay citas guardadas aún para un artículo, se mostrarán todas las opciones por defecto `(apellido, año)`.  
+  En caso de guardar las citas, al recargar la página, las citas se cargarán desde la base de datos y quedará seleccionada de forma predeterminada la última opción cargada en **Estilo de Cita** para cada cita. Esto servirá para no tener que recargar todos los datos desde un principio si por error se reinicia o se cierra la página, o si ocurre cualquier tipo de problema.
+  
+- **Color amarillo:** Aparece cuando se cambia de opción, es decir, la opción seleccionada **NO es la opción predeterminada** obtenida desde la base de datos.
+
+- **Color rojo:** Indica un problema. Este aparece, por ejemplo, cuando se quieren cargar campos vacíos luego de hacer clic en "Otro" en el menú de selección de la columna **Estilo de Cita**. Se indicará un mensaje de error y los bordes del input text tendrán un color rojizo, para ayudar a los usuarios a saber cuáles son los campos incorrectos.
+
+### Generación del PDF
+
+Al generar el PDF, una vez indicados los estilos de cita para todas las citas, en el documento esto se verá reflejado. En el artículo, donde antes había `[1]` o `[2]`, ahora estará el texto que previamente cargamos en la tabla.
+
+**Importante:** Recordar que siempre que se haga un cambio en un estilo de cita de la tabla, se deben guardar los cambios para que estos se reflejen al generar el PDF.
+
+---
 
 # Descripción del Desarrollo
 
