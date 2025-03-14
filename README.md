@@ -235,6 +235,119 @@ Actualmente, los idiomas soportados son:
 
 Se pueden agregar más idiomas según se requiera en futuras versiones del sistema.
 
+---
 
+# Descripción del Desarrollo
 
+Este desarrollo se puede ver en la ruta `JATSParser/classes`.
+
+Como se puede observar en este directorio, encontramos una carpeta llamada `components` y otra llamada `daos`.
+
+Dentro de la carpeta `components`, encontramos dos clases: `PublicationJATSUploadForm` y `TableHTML`.
+
+### Clase `PublicationJATSUploadForm`
+
+En la clase `PublicationJATSUploadForm` (que anteriormente ya formaba parte del plugin `JATSParser`), se trabaja toda la sección "JATSParser" en la etapa de publicación del artículo. Aquí se implementan los botones y los campos específicos para esa sección, es decir, todo lo que se mostrará al usuario.
+
+Lo que se ha modificado es la implementación de un nuevo campo en la tabla, un `FieldHTML`, que será el encargado de mostrar la "Tabla de Citas" explicada anteriormente.
+
+Para mostrar esta tabla de citas, se llama a un método estático de la clase `Configuration`. Aquí es donde se utiliza el arreglo de estilos de citación soportados. Se verifica si el estilo de cita seleccionado desde la configuración del plugin (en la clase se encuentra en una variable llamada `$citationStyle`, la cual se recibe desde un metadato cargado en OJS) existe en el arreglo de lenguajes soportados para la tabla (`$supportedCitationStyles`). Si existe, en la sección `JATSParser` de la etapa de publicación se mostrará la tabla; si no, no se mostrará nada.
+
+### Clase `TableHTML`
+
+Antes de crear el `FieldHTML` que generará la tabla, se instancia una clase llamada `TableHTML`, que recibe como parámetros el estilo de cita seleccionado en la configuración, la ruta absoluta del archivo XML seleccionado (para poder cargar el DOM de ese archivo y recuperar sus datos), y un arreglo llamado `$customCitationData`, que es el arreglo obtenido desde la base de datos. Este arreglo contiene, si para un artículo ya se han guardado citas, varios datos, entre ellos, los IDs de las citas y lo seleccionado en la columna "Estilo de Cita" en la Tabla de Citas.
+
+#### Obtener los Datos desde la Base de Datos
+
+En la variable `$customPublicationSettingsDao` se guarda la instancia de un objeto llamado `CustomPublicationSettingsDao()`.
+
+Este objeto se encuentra dentro de la carpeta `daos` mencionada anteriormente y tiene dos métodos:
+
+1. **`getSetting`**: Recibe el ID de la publicación (artículo), el nombre de la configuración a buscar en la tabla `publicationsettings` y el `localeKey` (por ejemplo, `es_ES`). El `localeKey` es importante, ya que para diferentes idiomas podemos tener una configuración de citas distinta y además distintas traducciones en la tabla de citas. Este método busca una coincidencia de la fila `jatsParser::citationTableData` en la tabla `publication_settings` en la base de datos, teniendo en cuenta que debe coincidir el ID de la publicación y el `localeKey` recibidos como parámetros.
+
+   Si se encuentra una coincidencia, se retorna un arreglo con los datos cargados en la base de datos (lo que se retorna desde la base de datos es un JSON, pero mediante la función `json_decode`, se convierte a un arreglo).
+
+   **Nota**: Es importante tener en cuenta que si para un artículo en un idioma determinado **NO** se han guardado las citas desde el botón "Guardar citas" presente en la Tabla de Citas, los datos que se mostrarán en las opciones de la columna "Estilo de Cita" serán por defecto (es decir, `Apellido, Nombre`). Si se han guardado las citas para ese idioma y artículo específico, entonces no se mostrarán los valores por defecto, sino lo último que se haya seleccionado como valor de opción para cada cita.
+
+2. **`updateSetting`**: Se ejecuta al hacer clic en el botón "Guardar Citas" en la Tabla de Citas. Este método se encarga de insertar en la base de datos toda la configuración necesaria referida a ese artículo en ese idioma específico. Primero, verifica si ya existe alguna ocurrencia teniendo en cuenta el ID de la publicación y el `localeKey`. Si hay ocurrencias, solo actualiza el campo `setting_value` referido a ese artículo y idioma específico. Si no existe ninguna ocurrencia, inserta el valor por primera vez en la fila con un `setting_name` de `jatsParser::citationTableData`, respetando que el ID de la publicación de esa fila sea igual al ID de la publicación recibido por parámetro, y lo mismo para el `localeKey`.
+
+   El llamado a este método se realiza en el archivo `process_citations.php`, el cual será explicado posteriormente.
+
+#### Entendiendo la Clase `TableHTML`
+
+La clase `TableHTML` se encarga de procesar y crear un arreglo que será utilizado para renderizar el HTML que muestre la tabla de citas.
+
+Este arreglo se crea siguiendo los siguientes pasos:
+
+1. **Instanciación de `DOMDocument`**: Se instancia un `DOMDocument` y se carga la ruta del archivo XML que se va a procesar (recibida como parámetro).
+
+   Este DOM se utiliza para instanciar una clase `DOMXPath`, almacenada bajo el nombre `xpath`, que será utilizada para hacer el procesamiento posterior del DOM del XML JATS.
+
+2. **Llamada a `extractXRefs`**: En el constructor de la clase, se llama a la función `extractXRefs()`. Esta función realiza una consulta `xpath` para buscar en el DOM del documento XML todas las citas. Las citas en un XML JATS aparecen en el elemento `<body>` bajo una etiqueta llamada `<xref>`, que contiene atributos como el ID de cita (un identificador único) y `rid` (hace referencia a las citas que son citadas, por ejemplo, si el `rid` dice `parser0 parser1 parser2`, esto significa que se están citando las referencias con los IDs `parser0`, `parser1`, y `parser2`).
+
+   Cada cita encontrada es procesada para obtener las 50 palabras anteriores a la cita, lo que conocemos como "Contexto" en la Tabla de Citas. Si se definen dos o más citas en el mismo párrafo con el mismo atributo `rid`, se marca la cita para evitar problemas de procesamiento.
+
+   La cantidad de palabras que se toman antes de la cita está definida en la constante `CITATION_MARKER`, la cual está originalmente configurada en 50, pero se puede modificar.
+
+   Finalmente, en el arreglo `$xrefsArray` se guardan el contexto, el `rid`, y el texto original de la cita.
+
+3. **Llamada a `extractReferences`**: Se invoca la función `extractReferences()`, que realiza una consulta `xpath` y genera un arreglo que contiene, para cada ID de referencia (como `parser0`), el texto completo de la referencia y un arreglo con los autores indicados en esa referencia.
+
+   Las referencias en XML JATS están en el elemento `<back>`. Cada referencia está contenida en un elemento `<ref>`, con un atributo `id` (como `parser0`). Esta referencia contiene elementos como `<mixed-citation>`, que tiene el texto completo de la referencia, y `<element-citation>`, que contiene cada parte de la referencia (fecha, autores, título, etc.).
+
+4. **Llamada a `mergeArrays`**: Finalmente, se llama al método `mergeArrays()`, que combina los dos arreglos generados anteriormente (`$xrefsArray` y `$referencesArray`) en un solo arreglo de la siguiente estructura:
+
+```php
+[
+    'xref_id1' => [
+        'status' => 'default',
+        'citationText' => '',
+        'context' => 'Contexto 1',
+        'rid' => 'parser_0 parser_1',
+        'references' => [
+            [
+                'id' => 'parser_0',
+                'reference' => 'Referencia 1',
+                'authors' => [
+                    'data_1' => [
+                        'surname' => 'Smith',
+                        'year' => '2020'
+                    ],
+                    'data_2' => [
+                        'surname' => 'Johnson',
+                        'year' => '2020'
+                    ]
+                ]
+            ],
+            [
+                'id' => 'parser_1',
+                'reference' => 'Referencia 2',
+                'authors' => [
+                    'data_1' => [
+                        'surname' => 'Doe',
+                        'year' => '2019'
+                    ]
+                ]
+            ]
+        ]
+    ],
+    'xref_id2' => [
+        'status' => 'not-default',
+        'citationText' => '(Smith y Johnson, 2020; Doe et al, 2019)',
+        'context' => 'Contexto 2',
+        'rid' => 'parser_1',
+        'references' => [
+            [
+                'id' => 'parser_1',
+                'reference' => 'Referencia 1',
+                'authors' => [
+                    'data_1' => [
+                        'surname' => 'Doe',
+                        'year' => '2019'
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
 
