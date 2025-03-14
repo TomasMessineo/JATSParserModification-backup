@@ -345,7 +345,7 @@ Este arreglo se crea siguiendo los siguientes pasos:
 
    Las referencias en XML JATS están en el elemento `<back>`. Cada referencia está contenida en un elemento `<ref>`, con un atributo `id` (como `parser0`). Esta referencia contiene elementos como `<mixed-citation>`, que tiene el texto completo de la referencia, y `<element-citation>`, que contiene cada parte de la referencia (fecha, autores, título, etc.).
 
-4. **Llamada a `mergeArrays`**: Finalmente, se llama al método `mergeArrays()`, que combina los dos arreglos generados anteriormente (`$xrefsArray` y `$referencesArray`) en un solo arreglo de la siguiente estructura:
+4. **Llamada a `mergeArrays`**: Finalmente, se llama al método `mergeArrays()`, que combina los dos arreglos generados anteriormente (`$xrefsArray` y `$referencesArray`) en un solo arreglo llamado $arrayData con la siguiente estructura:
 
 ```php
 [
