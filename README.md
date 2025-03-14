@@ -400,4 +400,27 @@ Este arreglo se crea siguiendo los siguientes pasos:
         ]
     ]
 ]
+```
+
+Luego de crear el arreglo `$arrayData`, el constructor llama al método `makeHtml()`.
+
+Este método almacena en una variable `$classname` la concatenación del namespace, el estilo de citación (APA, AMA, IEEE, etc.) con la primera letra en mayúscula y la palabra "Style". A continuación, se llama a la función `processContexts()`, que recibe como parámetro el arreglo `$arrayData`.
+
+La función `processContexts()` itera sobre el arreglo recibido utilizando un `foreach` de la siguiente manera:
+
+```php
+foreach ($data as $xrefId => &$item) {
+    // código...
+}
+```
+
+Esta iteración se hace para saber qué texto mostrar en el lugar de la cita dentro del contexto. Esta es la razón por la cual, en el arreglo `$xrefsArray`, se guarda el valor `originalText` como valor de cada cita. En caso de que el valor asociado a la clave `citationText` del arreglo `$item` **NO** esté vacío, esto quiere decir que ya hay un texto para esa cita cargado y, por lo tanto, en el contexto, lo que debería aparecer en el lugar donde está la cita es ese texto de forma predeterminada. En caso de que esté vacío, se almacenará en la variable `$citationText` el valor asociado a la clave `originalText` (este valor contendrá lo que tenía inicialmente el elemento `<xref>` de la cita); si, por ejemplo, se usa el plugin **TEXTURE**, se mostrará algo como `[1]`, por ejemplo. Esto en la Tabla de Citas se muestra cuando, para alguna o algunas citas, aún no se ha guardado ningún valor, siendo esta la forma de mostrar el texto en su forma "Default".
+
+#### ¿Cuándo se guarda este texto?
+
+- Cuando en la tabla se hace click en "Guardar Citas". Esto hace que las citas se guarden en formato JSON en la base de datos, tal y como se explicó antes; eso quiere decir que ya va a haber un texto cargado para cada cita. Aquí, en este método, es donde se verifica.
+
+#### ¿Cómo identifico el lugar donde tengo que poner el texto dentro del contexto?
+
+- En una parte del método `extraxtXRefs()`, podemos ver que en la variable `$context` se guarda `$beforeWords` (50 palabras anteriores a la cita), concatenadas con un espacio en blanco y una constante `self::CITATION_MARKER`. Esta constante es un identificador o marca que tendrá el contexto, para que, cuando se procese en `processContexts()`, se reconozca dónde se debe poner el texto (ya sea el texto por default contenido en el elemento `<xref>` de la cita o el texto guardado en la base de datos, como "(Giménez, 2025)", por ejemplo).
 
