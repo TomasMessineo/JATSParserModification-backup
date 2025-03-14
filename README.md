@@ -446,8 +446,14 @@ La idea es que cada estilo de citación tenga su propia plantilla HTML (este HTM
    
 4. Asegurarse de que el nombre de la nueva clase sea el mismo que el nombre del archivo.
 
-5. Declarar el método estático `makeHtml` que reciba los siguientes parámetros en el orden indicado: El arreglo con todos los datos de la tabla (`$arrayData`), la ruta absoluta del xml (`$absoluteXmlPath`), el estilo de citación seleccionado desde la configuración del plugin (`$citationStyle`), el id de la publicación (`$publicationId`) y la key del idioma local (`$locale_key`). Esto se recibe desde la clase `TableHTML`.
+5. Declarar el método estático `makeHtml` que reciba los siguientes parámetros en el orden indicado:  
+   - El arreglo con todos los datos de la tabla (`$arrayData`),  
+   - La ruta absoluta del XML (`$absoluteXmlPath`),  
+   - El estilo de citación seleccionado desde la configuración del plugin (`$citationStyle`),  
+   - El ID de la publicación (`$publicationId`),  
+   - La key del idioma local (`$locale_key`).  
 
+Estos parámetros se reciben desde la clase `TableHTML`.
 6. Diseñar el formulario HTML necesario para la nueva Tabla de Citas.
 
 Para crear la plantilla se puede seguir como ejemplo la clase `ApaStyle`, la cual puede servir de ayuda para entender cómo se desarrolló la misma.
