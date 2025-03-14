@@ -424,3 +424,32 @@ Esta iteración se hace para saber qué texto mostrar en el lugar de la cita den
 
 - En una parte del método `extraxtXRefs()`, podemos ver que en la variable `$context` se guarda `$beforeWords` (50 palabras anteriores a la cita), concatenadas con un espacio en blanco y una constante `self::CITATION_MARKER`. Esta constante es un identificador o marca que tendrá el contexto, para que, cuando se procese en `processContexts()`, se reconozca dónde se debe poner el texto (ya sea el texto por default contenido en el elemento `<xref>` de la cita o el texto guardado en la base de datos, como "(Giménez, 2025)", por ejemplo).
 
+---
+
+Luego de esto, dentro de cada contexto, en el lugar donde está el identificador o marca para el texto de la cita se agregan algunos estilos para mostrarlo de color azul (sirve de ayuda visual), para finalmente reemplazarla y, en su lugar, colocar el texto de la cita con sus correspondientes estilos. Este nuevo contexto modificado se guardará para esa cita (arreglo `$item`) bajo la clave `context`.
+
+Esto sirve para poder verificar qué texto se muestra en el lugar de la cita dentro del contexto, ya sea un valor por default o el que cargó el usuario desde la Tabla de Citas. Esto ayudará para que no se tenga que volver a cargar para cada cita su estilo de citación en caso de que haya algún inconveniente, evitando tener que rehacer todo nuevamente.
+
+Al finalizar este método `makeHtml`, se llama al método estático `makeHtml` de la clase `$className`. La clase que se llame dependerá del estilo de citación seleccionado en la configuración del plugin. Por ejemplo, si se está trabajando en APA, se llamará a la clase `ApaStyle`; si es IEEE, se llamará a `IeeeStyle`, y así sucesivamente con cada estilo de citación.
+
+La idea es que cada estilo de citación tenga su propia plantilla HTML (este HTML representará a la Tabla de Citas mostrada). Por el momento, solo está creada la plantilla para APA (clase `ApaStyle`), pero si se desea agregar una nueva plantilla para un estilo de citación se pueden seguir los siguientes pasos:
+
+1. Asegurarse de que el estilo de citación esté definido en el arreglo `$supportedCustomCitationStyles` (agregar **en minúscula** la clave del estilo de citación al que se le desea agregar soporte).
+
+2. Crear un archivo que siga la estructura: `{estiloDeCitación}Style.php` dentro del directorio `/components/form/CitationStyles/`.  
+   Por ejemplo, si se desea agregar una plantilla para el estilo de citación Vancouver, se debe crear un archivo llamado `VancouverStyle.php` en la ruta especificada.
+
+3. En el nuevo archivo creado, agregar el siguiente `require_once`:
+   ```php
+   require_once __DIR__ . '/../Helpers/process_citations.php';
+   ```
+   
+4. Asegurarse de que el nombre de la nueva clase sea el mismo que el nombre del archivo.
+
+5. Declarar el método estático `makeHtml` que reciba los siguientes parámetros en el orden indicado: El arreglo con todos los datos de la tabla (`$arrayData`), la ruta absoluta del xml (`$absoluteXmlPath`), el estilo de citación seleccionado desde la configuración del plugin (`$citationStyle`), el id de la publicación (`$publicationId`) y la key del idioma local (`$locale_key`). Esto se recibe desde la clase `TableHTML`.
+
+6. Diseñar el formulario HTML necesario para la nueva Tabla de Citas.
+
+Para crear la plantilla se puede seguir como ejemplo la clase `ApaStyle`, la cual puede servir de ayuda para entender cómo se desarrolló la misma.
+
+---
